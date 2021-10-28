@@ -1,8 +1,7 @@
 #ifndef INFO_H
 #define INFO_H
 #include <linux/limits.h>
-#define EXIT_FAILURE -1
-#define PIPE_DIRECTORY "/tmp"   //dirtoria para ficheiros temporários
+#define PIPE_DIRECTORY "/tmp/"   //dirtoria para ficheiros temporários
 #define CLIENT_BC_NAME_PATTERN "BC-%d.pipe"
 #define BALCAO_PIPE_NAME "balcao.pipe"
 
@@ -16,6 +15,6 @@ typedef struct respostaBC{
     char resposta[PATH_MAX];
 }respostaBC;
 
-myAbort(const char *msg, int exit_status);
+void myAbort(const char *msg, int exit_status);
 
 #endif

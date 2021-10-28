@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -12,7 +13,7 @@ int open_clientpipe(void);
 void cleanup(void) __attribute__ ((destructor));
 void catch_sigint(int signo){
     if(signo==SIGINT){
-        cleanup();  //ve se o pipe está aberto, fecha-o e limpa-lo do filesystem
+        //cleanup();  //ve se o pipe está aberto, fecha-o e limpa-lo do filesystem
         signal(signo,SIG_DFL); //sig default
         kill(getpid(),signo); //vou enviar-me um sigint e ter um comportamento default que é terminar
     }
@@ -51,7 +52,7 @@ int main(int argc, char **argv){
     printf("Indique sintomas:\n");
     scanf("%[^\n]s", sintomas);
 
-    sprintf(pedidoCB.nomepipe,"%s%s%s",PIPE_DIRECTORY,CLIENT_BC_NAME_PATTERN,getpid());
+    sprintf(pedidoCB.nomepipe,"%s%s%d",PIPE_DIRECTORY,CLIENT_BC_NAME_PATTERN,getpid());
     strcpy(pedidoCB.sintomas,sintomas);
     strcpy(pedidoCB.nome,nome);
 
@@ -60,17 +61,17 @@ int main(int argc, char **argv){
     if(nbytes_write == -1){
         myAbort("[CLIENTE] Error while writing to the server pipe!", EXIT_FAILURE);
     } else if(nbytes_write != sizeof(pedidoCB)){
-        fprintf(stdout, "[CLIENTE] Unexpected number of bytes written <%d/%d>. Discarding this operation!\n", nbytes_write, sizeof(pedidoCB));
+        fprintf(stdout, "[CLIENTE] Unexpected number of bytes written <%d/%ld>. Discarding this operation!\n", nbytes_write, sizeof(pedidoCB));
     }
-    fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%d>.\n", nbytes_write, sizeof(pedidoCB));
+    fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%ld>.\n", nbytes_write, sizeof(pedidoCB));
 
     nbytes_read = read(clientpipe_fd, &respostaBC, sizeof(respostaBC));
     if(nbytes_read == -1){
         myAbort("[CLIENTE] Error while writing to the server pipe!", EXIT_FAILURE);
     } else if(nbytes_read != sizeof(respostaBC)){
-        fprintf(stdout, "[CLIENTE] Unexpected number of bytes written <%d/%d>. Discarding this operation!\n", nbytes_write, sizeof(respostaBC));
+        fprintf(stdout, "[CLIENTE] Unexpected number of bytes written <%d/%ld>. Discarding this operation!\n", nbytes_write, sizeof(respostaBC));
     }
-    fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%d>.\n", nbytes_write, sizeof(respostaBC));
+    fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%ld>.\n", nbytes_write, sizeof(respostaBC));
 
     fprintf(stdout, "[CLIENTE] resposta do balcao: %s", respostaBC.resposta);
 
@@ -101,7 +102,7 @@ int open_clientpipe(void){
     int clientpipe_fd;
     char clientpipe[PATH_MAX];
 
-    sprintf(clientpipe,"%s%s%s",PIPE_DIRECTORY,CLIENT_BC_NAME_PATTERN,getpid());
+    sprintf(clientpipe,"%s%s%d",PIPE_DIRECTORY,CLIENT_BC_NAME_PATTERN,getpid());
     
     fprintf(stdout, "[CLIENTE] Attempt to create the client pipe <%s>.\n", clientpipe);
     if(access(clientpipe,F_OK)==-1){
@@ -130,6 +131,6 @@ int open_clientpipe(void){
     }
 } */
 
-myAbort(const char *msg, int exit_status){
-    perror(msg); exit(exit);
+void myAbort(const char *msg, int exit_status){
+    perror(msg); exit(exit_status);
 }

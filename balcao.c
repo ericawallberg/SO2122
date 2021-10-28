@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -22,7 +23,7 @@ int open_BCpipe(){
     if((BCpipe_fd = open(BCpipe,O_RDWR))==-1)   //nao ha situação de broken pipe
         myAbort("[BALCAO] Error while opening server pipe.",EXIT_FAILURE);
 
-    return BCpipe;
+    return BCpipe_fd;
 }
 
 
@@ -67,6 +68,6 @@ int main(int argc, char **argv){
 
 }
 
-myAbort(const char *msg, int exit_status){
+void myAbort(const char *msg, int exit_status){
     perror(msg); exit(exit_status);
 }
