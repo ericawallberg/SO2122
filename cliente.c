@@ -8,13 +8,25 @@
 #include "info.h"
 
 int open_balcaopipe(void);
-int open_clientpipe(const pedidoCB* pedido);
+int open_clientpipe(void);
+void cleanup(void) __attribute__ ((destructor));
+void catch_sigint(int signo){
+    if(signo==SIGINT){
+        cleanup();  //ve se o pipe está aberto, fecha-o e limpa-lo do filesystem
+        signal(signo,SIG_DFL); //sig default
+        kill(getpid(),signo); //vou enviar-me um sigint e ter um comportamento default que é terminar
+    }
+}
 
 int main(int argc, char **argv){
     char nome[PATH_MAX],balcaopipe[PATH_MAX];
     int balcaopipe_fd; int clientpipe_fd;
     int nbytes_read, nbytes_write;
-    pedidoCB pedidoCB;
+    pedidoCB pedidoCB; respostaBC respostaBC;
+
+    //ignore SIGPIPE forc
+    signal(SIGPIPE, SIG_IGN);
+    
 
     //verificar se balcao existe
     balcaopipe_fd = open_balcaopipe();
@@ -22,6 +34,8 @@ int main(int argc, char **argv){
 
     //Ignores the SIGPIPE signal forcing the write() system call to return -1 instead of terminating the process
     signal(SIGPIPE,SIG_IGN);
+    //handle ^C SIGINT to perform final cleanup
+    signal(SIGINT, catch_sigint);
 
     //verifica nome
     if(argc==2){
@@ -50,6 +64,15 @@ int main(int argc, char **argv){
     }
     fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%d>.\n", nbytes_write, sizeof(pedidoCB));
 
+    nbytes_read = read(clientpipe_fd, &respostaBC, sizeof(respostaBC));
+    if(nbytes_read == -1){
+        myAbort("[CLIENTE] Error while writing to the server pipe!", EXIT_FAILURE);
+    } else if(nbytes_read != sizeof(respostaBC)){
+        fprintf(stdout, "[CLIENTE] Unexpected number of bytes written <%d/%d>. Discarding this operation!\n", nbytes_write, sizeof(respostaBC));
+    }
+    fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%d>.\n", nbytes_write, sizeof(respostaBC));
+
+    fprintf(stdout, "[CLIENTE] resposta do balcao: %s", respostaBC.resposta);
 
     
 }
@@ -74,7 +97,7 @@ int open_balcaopipe(){
     return balcaopipe_fd;
 }
 
-int open_clientpipe(const pedidoCB* pedido){
+int open_clientpipe(void){
     int clientpipe_fd;
     char clientpipe[PATH_MAX];
 
@@ -95,4 +118,18 @@ int open_clientpipe(const pedidoCB* pedido){
     }
 
     return clientpipe_fd;
+}
+
+/* void cleanup(void){ //implica usar variaveis globais
+    fprintf(stdout, "\nB[CLIENTE] Beginning resources clean up.\n");
+    if(clientpipe_fd!=-1){
+        close(clientepipe_fd);
+        if(unlink(clientpipe_name)==0){
+            fprintf(stdout, "[CLIENTE] Client pipe <%s> correctly deleted.\n",clientpipe_name);
+        }
+    }
+} */
+
+myAbort(const char *msg, int exit_status){
+    perror(msg); exit(exit);
 }

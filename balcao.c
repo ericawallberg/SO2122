@@ -42,7 +42,7 @@ int main(int argc, char **argv){
         fprintf(stdout,"[BALCAO] Read returns <%d> bytes.\n", nbytes_read);
 
         if(nbytes_read == -1){
-            myAbort("[BALCAO] Error while reading server pipe!\n, EXIT_FAILURE");
+            myAbort("[BALCAO] Error while reading server pipe!\n", EXIT_FAILURE);
         }else if(nbytes_read != sizeof(pedidoCB)){
             fprintf(stderr, "[BALCAO] Unexpected request size. Ignoring it!\n");
             continue;
@@ -65,4 +65,8 @@ int main(int argc, char **argv){
         }
     }
 
+}
+
+myAbort(const char *msg, int exit_status){
+    perror(msg); exit(exit_status);
 }
