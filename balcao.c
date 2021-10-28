@@ -52,6 +52,10 @@ int main(int argc, char **argv){
         fprintf(stdout, "[BALCAO] client pipe name is <%s>.\n", pedidoCB.nomepipe);
 
         clientpipe_fd = open(pedidoCB.nomepipe, O_WRONLY);
+        if(clientpipe_fd == -1){
+            fprintf(stderr, "[BALCAO] Error while opening the client pipe! Ignoring it.\n");
+            continue;
+        }
         nbytes_write= write(clientpipe_fd, &respostaBC, sizeof(respostaBC));
         if(nbytes_write == -1){
             fprintf(stdout, "[BALCAO] Error while writing to the client pipe! Ignoring it.\n");
