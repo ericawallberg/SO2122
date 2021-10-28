@@ -8,7 +8,7 @@
 
 
 int main(int argc, char **argv){
-    char nome[256];
+    char nome[PATH_MAX];
     pedidoCB pedidoCB;
 
     //verificar se balcao existe
@@ -23,11 +23,13 @@ int main(int argc, char **argv){
         return 0;
     }
 
-    char sintomas[256];
+    char sintomas[PATH_MAX];
     printf("Indique sintomas:\n");
     scanf("%[^\n]s", sintomas);
 
-    strcat("BC-",getpid());
-    strcpy(pedidoCB.nomepipe, fprintf())
+    sprintf(pedidoCB.nomepipe,"%s%s%s",PIPE_DIRECTORY,CLIENT_BC_NAME_PATTERN,getpid());
+    strcpy(pedidoCB.sintomas,sintomas);
+    strcpy(pedidoCB.nome,nome);
+    
 
 }
