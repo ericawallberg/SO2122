@@ -1,19 +1,19 @@
-#ifndef INFO_H
-#define INFO_H
+#ifndef MB_COMMUNICATION_H
+#define MB_COMMUNICATION_H
 #include <linux/limits.h>
 #define PIPE_DIRECTORY "/tmp/"   //dirtoria para ficheiros temporários
-#define CLIENT_BC_NAME_PATTERN "BC-%d.pipe"
-#define CLIENTE_BALCAO_PIPE_NAME "cliente-balcao.pipe"
+#define BM_PIPE_NAME_PATTERN "BM-%d.pipe"
+#define MB_PIPE_NAME "medico-balcao.pipe"
 
-typedef struct pedidoCB{
+typedef struct pedidoMB{
     char nomepipe[PATH_MAX];
     char nome[PATH_MAX];
     char sintomas[PATH_MAX];
-} pedidoCB;
+} pedidoMB;
 
-typedef struct respostaBC{
+typedef struct respostaBM{
     char resposta[PATH_MAX];
-}respostaBC;
+}respostaMB;
 
 void myAbort(const char *msg, int exit_status);
 

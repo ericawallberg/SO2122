@@ -5,7 +5,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
-#include "info.h"
+#include "CB_communication.h"
+#include "MB_communication.h"
 
 typedef struct cliente{
     char nomepipe[PATH_MAX];

@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
-#include "info.h"
+#include "CB_communication.h"
 
 int open_balcaopipe(void);
 int open_clientpipe(char *clientpipe);
@@ -44,7 +44,7 @@ int main(int argc, char **argv){
         printf("%s", nome);
     }
     else{
-        printf("Numero de argumentos invalido. Indique nome");
+        printf("Numero de argumentos invalido. Indique nome.\n");
         return 0;
     }
 
@@ -74,8 +74,6 @@ int main(int argc, char **argv){
     fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%ld>.\n", nbytes_write, sizeof(respostaBC));
 
     fprintf(stdout, "[CLIENTE] resposta do balcao: <%s>\n", respostaBC.resposta);
-
-    
 }
 
 
