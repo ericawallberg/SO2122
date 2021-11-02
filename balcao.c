@@ -7,11 +7,19 @@
 #include <string.h>
 #include "info.h"
 
+typedef struct cliente{
+    char nomepipe[PATH_MAX];
+    char nome[PATH_MAX];
+    char sintomas[PATH_MAX];
+} cliente;
+
+cliente* adiciona_cliente(cliente* tab, int* n, cliente* novo);
+void mostra_clientes(cliente* tab, int* n);
 int open_BCpipe(){
     char BCpipe[PATH_MAX];
     int BCpipe_fd;
 
-    sprintf(BCpipe, "%s%s", PIPE_DIRECTORY, BALCAO_PIPE_NAME);
+    sprintf(BCpipe, "%s%s", PIPE_DIRECTORY, CLIENTE_BALCAO_PIPE_NAME);
     fprintf(stdout, "Balcao is opening its pipe <%s> to receive client requests ... \n", BCpipe);
 
     //check if named pipe already exists
@@ -28,12 +36,11 @@ int open_BCpipe(){
 
 
 int main(int argc, char **argv){
-    int BCpipe_fd;
-    int nbytes_read;
-    int nbytes_write;
-    int clientpipe_fd;
+    int BCpipe_fd,clientpipe_fd;
+    int nbytes_read, nbytes_write; 
     pedidoCB pedidoCB;
     respostaBC respostaBC;
+    cliente *clientes = NULL; int clientestotal=0;
 
     BCpipe_fd = open_BCpipe();
 
@@ -48,6 +55,15 @@ int main(int argc, char **argv){
             fprintf(stderr, "[BALCAO] Unexpected request size. Ignoring it!\n");
             continue;
         }
+        
+        cliente novo;
+        strcpy(novo.nomepipe,pedidoCB.nomepipe);
+        strcpy(novo.nome,pedidoCB.nome);
+        strcpy(novo.sintomas,pedidoCB.sintomas);
+
+        clientes = adiciona_cliente(clientes, &clientestotal, &novo);
+
+        mostra_clientes(clientes, &clientestotal);
 
         strcpy(respostaBC.resposta,"oi");
         fprintf(stdout, "[BALCAO] client pipe name is <%s>.\n", pedidoCB.nomepipe);
@@ -62,10 +78,61 @@ int main(int argc, char **argv){
             fprintf(stdout, "[BALCAO] Error while writing to the client pipe! Ignoring it.\n");
         }
         else if(nbytes_write!=sizeof(respostaBC)){
-            fprintf(stderr,"[BALCAO] Unexpected number of bytes written <%d/%d>. Ignoring it.\n", nbytes_write, sizeof(respostaBC));
+            fprintf(stderr,"[BALCAO] Unexpected number of bytes written <%d/%ld>. Ignoring it.\n", nbytes_write, sizeof(respostaBC));
         }
     }
 
+    if(clientes!=NULL)
+        free(clientes);
+
+}
+
+cliente* adiciona_cliente(cliente* tab, int* n, cliente* novo){
+    cliente* aux;
+    aux = realloc(tab, sizeof(cliente)*(*n+1));
+    if(aux!=NULL){
+        tab=aux;
+        strcpy(tab[*n].nomepipe,novo->nomepipe);
+        strcpy(tab[*n].nome,novo->nome);
+        strcpy(tab[*n].sintomas,novo->sintomas);
+
+        (*n)++;
+    }
+    return tab;
+}
+
+cliente* elimina_cliente(cliente* tab, int*n, char *nomepipe){
+    cliente *aux,t;
+    int i;
+    for(i=0;i<*n && strcmp(tab[*n].nomepipe, nomepipe)!=0;i++);
+    if(i==*n){
+        fprintf(stderr, "[BALCAO] Cliente a eliminar nao existe\n");
+        return tab;
+    }
+    else if(*n==1){
+        free(tab); *n=0; return NULL;
+    }
+    else{
+        t=tab[i];
+        tab[i]=tab[*n-1];
+        aux=realloc(tab,sizeof(cliente)*(*n-1));
+        if(aux!=NULL){
+            tab=aux;
+            (*n)--;
+        }
+        else tab[i]=t;
+        return tab;
+    }
+}
+
+void mostra_clientes(cliente* tab, int* n){
+    for(int i=0;i<*n;i++){
+        fprintf(stdout, "\n\n----------------");
+        fprintf(stdout, "\nNome do Pipe:\t%s", tab[i].nomepipe);
+        fprintf(stdout, "\nNome:\t\t%s", tab[i].nome);
+        fprintf(stdout, "\nSintomas:\t%s", tab[i].sintomas);
+        fprintf(stdout, "\n----------------\n");
+    }
 }
 
 void myAbort(const char *msg, int exit_status){
