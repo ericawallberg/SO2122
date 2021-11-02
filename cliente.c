@@ -9,7 +9,7 @@
 #include "info.h"
 
 int open_balcaopipe(void);
-int open_clientpipe(void);
+int open_clientpipe(char *clientpipe);
 void cleanup(void) __attribute__ ((destructor));
 void catch_sigint(int signo){
     if(signo==SIGINT){
@@ -24,14 +24,14 @@ int main(int argc, char **argv){
     int balcaopipe_fd; int clientpipe_fd;
     int nbytes_read, nbytes_write;
     pedidoCB pedidoCB; respostaBC respostaBC;
+    char clientpipe[PATH_MAX];
 
-    //ignore SIGPIPE forc
-    signal(SIGPIPE, SIG_IGN);
-    
+    sprintf(clientpipe,"%s%s",PIPE_DIRECTORY,CLIENT_BC_NAME_PATTERN);
+    sprintf(clientpipe,clientpipe,getpid());
 
     //verificar se balcao existe
     balcaopipe_fd = open_balcaopipe();
-    clientpipe_fd = open_clientpipe();
+    clientpipe_fd = open_clientpipe(clientpipe);
 
     //Ignores the SIGPIPE signal forcing the write() system call to return -1 instead of terminating the process
     signal(SIGPIPE,SIG_IGN);
@@ -52,7 +52,7 @@ int main(int argc, char **argv){
     printf("Indique sintomas:\n");
     scanf("%[^\n]s", sintomas);
 
-    sprintf(pedidoCB.nomepipe,"%s%s%d",PIPE_DIRECTORY,CLIENT_BC_NAME_PATTERN,getpid());
+    strcpy(pedidoCB.nomepipe,clientpipe);
     strcpy(pedidoCB.sintomas,sintomas);
     strcpy(pedidoCB.nome,nome);
 
@@ -73,7 +73,7 @@ int main(int argc, char **argv){
     }
     fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%ld>.\n", nbytes_write, sizeof(respostaBC));
 
-    fprintf(stdout, "[CLIENTE] resposta do balcao: %s", respostaBC.resposta);
+    fprintf(stdout, "[CLIENTE] resposta do balcao: <%s>\n", respostaBC.resposta);
 
     
 }
@@ -83,7 +83,7 @@ int open_balcaopipe(){
     int balcaopipe_fd;
     char balcaopipe[PATH_MAX];
 
-    sprintf(balcaopipe,"%s%s", PIPE_DIRECTORY,BALCAO_PIPE_NAME);
+    sprintf(balcaopipe,"%s%s", PIPE_DIRECTORY,CLIENTE_BALCAO_PIPE_NAME);
     fprintf(stdout, "[CLIENTE] Waiting for the server to open its pipe.\n");
 
     if(access(balcaopipe,F_OK)==-1)
@@ -98,12 +98,9 @@ int open_balcaopipe(){
     return balcaopipe_fd;
 }
 
-int open_clientpipe(void){
+int open_clientpipe(char *clientpipe){
     int clientpipe_fd;
-    char clientpipe[PATH_MAX];
-
-    sprintf(clientpipe,"%s%s%d",PIPE_DIRECTORY,CLIENT_BC_NAME_PATTERN,getpid());
-    
+  
     fprintf(stdout, "[CLIENTE] Attempt to create the client pipe <%s>.\n", clientpipe);
     if(access(clientpipe,F_OK)==-1){
         if(mkfifo(clientpipe, S_IRUSR | S_IWUSR)!=0)
