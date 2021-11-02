@@ -3,7 +3,7 @@
 #include <linux/limits.h>
 #define PIPE_DIRECTORY "/tmp/"   //dirtoria para ficheiros temporários
 #define CLIENT_BC_NAME_PATTERN "BC-%d.pipe"
-#define BALCAO_PIPE_NAME "balcao.pipe"
+#define CLIENTE_BALCAO_PIPE_NAME "cliente-balcao.pipe"
 
 typedef struct pedidoCB{
     char nomepipe[PATH_MAX];
