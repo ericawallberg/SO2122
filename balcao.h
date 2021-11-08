@@ -8,6 +8,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#define MAXCLIENTES 4
+#define MAXMEDICOS  4
+#define FILAESPERA 5
 
 typedef struct cliente{
     char nomepipe[PATH_MAX];
