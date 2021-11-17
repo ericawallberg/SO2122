@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
-#define MAXCLIENTES 4
-#define MAXMEDICOS  4
+#define MAXCLIENTES 10
+#define MAXMEDICOS  10
 #define FILAESPERA 5
 
 typedef struct cliente{
@@ -24,6 +24,9 @@ typedef struct medico{
     char especialidade[PATH_MAX];
 }medico;
 
+typedef struct settings{
+    int maxclientes, maxmedicos;
+}settings;
 
 //criar possivel storage.h
 cliente* adiciona_cliente(cliente* tab, int* n, cliente* novo);

@@ -8,12 +8,17 @@
 #include <signal.h>
 #include "CB_communication.h"
 
+int writefd_global, readfd_global;
+
+void envia_msg_balcao(int fdr, int fdw, pedidoCB* pedidoCB);
 int open_balcaopipe(void);
 int open_clientpipe(char *clientpipe);
 void cleanup(void) __attribute__ ((destructor));
 void catch_sigint(int signo){
     if(signo==SIGINT){
         //cleanup();  //ve se o pipe está aberto, fecha-o e limpa-lo do filesystem
+        send_msg_balcao(writefd_global, readfd_global,/*pedido*/);
+        close(writefd_global);
         signal(signo,SIG_DFL); //sig default
         kill(getpid(),signo); //vou enviar-me um sigint e ter um comportamento default que é terminar
     }
@@ -56,7 +61,9 @@ int main(int argc, char **argv){
     strcpy(pedidoCB.sintomas,sintomas);
     strcpy(pedidoCB.nome,nome);
 
-    fprintf(stdout, "[CLIENTE] Sendind pedidoCB a balcao.\n");
+    envia_msg_balcao(balcaopipe_fd,clientpipe_fd, &pedidoCB);
+/*
+    fprintf(stdout, "[CLIENTE] Sending pedidoCB a balcao.\n");
     nbytes_write = write(balcaopipe_fd, &pedidoCB, sizeof(pedidoCB));
     if(nbytes_write == -1){
         myAbort("[CLIENTE] Error while writing to the server pipe!", EXIT_FAILURE);
@@ -64,6 +71,7 @@ int main(int argc, char **argv){
         fprintf(stdout, "[CLIENTE] Unexpected number of bytes written <%d/%ld>. Discarding this operation!\n", nbytes_write, sizeof(pedidoCB));
     }
     fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%ld>.\n", nbytes_write, sizeof(pedidoCB));
+    writefd_global=balcaopipe_fd;
 
     nbytes_read = read(clientpipe_fd, &respostaBC, sizeof(respostaBC));
     if(nbytes_read == -1){
@@ -74,8 +82,31 @@ int main(int argc, char **argv){
     fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%ld>.\n", nbytes_write, sizeof(respostaBC));
 
     fprintf(stdout, "[CLIENTE] resposta do balcao: <%s>\n", respostaBC.resposta);
+    */
 }
+void envia_msg_balcao(int fdr, int fdw, pedidoCB* pedidoCB){
+    respostaBC* respostaBC;
+    fprintf(stdout, "[CLIENTE] Sending pedidoCB a balcao.\n");
+    int nbytes_write = write(fdw, &pedidoCB, sizeof(pedidoCB));
+    if(nbytes_write == -1){
+        myAbort("[CLIENTE] Error while writing to the server pipe!", EXIT_FAILURE);
+    } else if(nbytes_write != sizeof(pedidoCB)){
+        fprintf(stdout, "[CLIENTE] Unexpected number of bytes written <%d/%ld>. Discarding this operation!\n", nbytes_write, sizeof(pedidoCB));
+    }
+    fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%ld>.\n", nbytes_write, sizeof(pedidoCB));
+    writefd_global=fdw;
 
+    int nbytes_read = read(fdr, &respostaBC, sizeof(respostaBC));
+    if(nbytes_read == -1){
+        myAbort("[CLIENTE] Error while writing to the server pipe!", EXIT_FAILURE);
+    } else if(nbytes_read != sizeof(respostaBC)){
+        fprintf(stdout, "[CLIENTE] Unexpected number of bytes written <%d/%ld>. Discarding this operation!\n", nbytes_write, sizeof(respostaBC));
+    }
+    fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%ld>.\n", nbytes_write, sizeof(respostaBC));
+
+    fprintf(stdout, "[CLIENTE] resposta do balcao: <%s>\n", respostaBC->resposta);
+    readfd_global=fdr;
+}
 
 int open_balcaopipe(){
     int balcaopipe_fd;

@@ -29,6 +29,14 @@ int main(int argc, char **argv){
     pedidoCB pedidoCB;
     respostaBC respostaBC;
     cliente *clientes = NULL; int clientestotal=0;
+    settings settings;
+    char* tmp;
+    if((tmp = getenv("MAXMEDICOS"))!=NULL){
+        settings.maxmedicos = atoi(tmp);
+    } else settings.maxmedicos=MAXMEDICOS;
+    if((tmp = getenv("MAXCLIENTES"))!=NULL){
+        settings.maxclientes = atoi(tmp);
+    } else settings.maxclientes=MAXCLIENTES;
 
     CBpipe_fd = open_CBpipe();
 
@@ -43,17 +51,24 @@ int main(int argc, char **argv){
             fprintf(stderr, "[BALCAO] Unexpected request size. Ignoring it!\n");
             continue;
         }
-        
-        cliente novo;
-        strcpy(novo.nomepipe,pedidoCB.nomepipe);
-        strcpy(novo.nome,pedidoCB.nome);
-        strcpy(novo.sintomas,pedidoCB.sintomas);
+        if(clientestotal<settings.maxclientes){
 
-        clientes = adiciona_cliente(clientes, &clientestotal, &novo);
+            cliente novo;
+            strcpy(novo.nomepipe,pedidoCB.nomepipe);
+            strcpy(novo.nome,pedidoCB.nome);
+            strcpy(novo.sintomas,pedidoCB.sintomas);
 
-        mostra_clientes(clientes, &clientestotal);
+            clientes = adiciona_cliente(clientes, &clientestotal, &novo);
 
-        strcpy(respostaBC.resposta,"oi");
+            mostra_clientes(clientes, &clientestotal);
+
+
+
+            sprintf(respostaBC.resposta,"Novo cliente adicionado. clientestotal:\t%d\n", clientestotal);
+
+        }
+        else strcpy(respostaBC.resposta,"Limite maximo de clientes atingido no servidor.\n");
+
         fprintf(stdout, "[BALCAO] client pipe name is <%s>.\n", pedidoCB.nomepipe);
 
         clientpipe_fd = open(pedidoCB.nomepipe, O_WRONLY);
