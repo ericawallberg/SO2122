@@ -13,16 +13,6 @@ int writefd_global, readfd_global;
 void envia_msg_balcao(int fdr, int fdw, pedidoCB* pedidoCB);
 int open_balcaopipe(void);
 int open_clientpipe(char *clientpipe);
-void cleanup(void) __attribute__ ((destructor));
-void catch_sigint(int signo){
-    if(signo==SIGINT){
-        //cleanup();  //ve se o pipe está aberto, fecha-o e limpa-lo do filesystem
-        send_msg_balcao(writefd_global, readfd_global,/*pedido*/);
-        close(writefd_global);
-        signal(signo,SIG_DFL); //sig default
-        kill(getpid(),signo); //vou enviar-me um sigint e ter um comportamento default que é terminar
-    }
-}
 
 int main(int argc, char **argv){
     char nome[PATH_MAX],balcaopipe[PATH_MAX];
@@ -34,15 +24,6 @@ int main(int argc, char **argv){
     sprintf(clientpipe,"%s%s",PIPE_DIRECTORY,CLIENT_BC_NAME_PATTERN);
     sprintf(clientpipe,clientpipe,getpid());
 
-    //verificar se balcao existe
-    balcaopipe_fd = open_balcaopipe();
-    clientpipe_fd = open_clientpipe(clientpipe);
-
-    //Ignores the SIGPIPE signal forcing the write() system call to return -1 instead of terminating the process
-    signal(SIGPIPE,SIG_IGN);
-    //handle ^C SIGINT to perform final cleanup
-    signal(SIGINT, catch_sigint);
-
     //verifica nome
     if(argc==2){
         strcpy(nome, argv[1]);
@@ -53,6 +34,17 @@ int main(int argc, char **argv){
         return 0;
     }
 
+    //verificar se balcao existe
+    balcaopipe_fd = open_balcaopipe();
+    clientpipe_fd = open_clientpipe(clientpipe);
+
+    //Ignores the SIGPIPE signal forcing the write() system call to return -1 instead of terminating the process
+    signal(SIGPIPE,SIG_IGN);
+    //handle ^C SIGINT to perform final cleanup
+    //signal(SIGINT, catch_sigint);
+
+    
+
     char sintomas[PATH_MAX];
     printf("Indique sintomas:\n");
     scanf("%[^\n]s", sintomas);
@@ -61,8 +53,8 @@ int main(int argc, char **argv){
     strcpy(pedidoCB.sintomas,sintomas);
     strcpy(pedidoCB.nome,nome);
 
-    envia_msg_balcao(balcaopipe_fd,clientpipe_fd, &pedidoCB);
-/*
+    //envia_msg_balcao(balcaopipe_fd,clientpipe_fd, &pedidoCB);
+
     fprintf(stdout, "[CLIENTE] Sending pedidoCB a balcao.\n");
     nbytes_write = write(balcaopipe_fd, &pedidoCB, sizeof(pedidoCB));
     if(nbytes_write == -1){
@@ -82,7 +74,7 @@ int main(int argc, char **argv){
     fprintf(stdout, "[CLIENTE] The request was successfuly sent to balcao <%d/%ld>.\n", nbytes_write, sizeof(respostaBC));
 
     fprintf(stdout, "[CLIENTE] resposta do balcao: <%s>\n", respostaBC.resposta);
-    */
+    
 }
 void envia_msg_balcao(int fdr, int fdw, pedidoCB* pedidoCB){
     respostaBC* respostaBC;

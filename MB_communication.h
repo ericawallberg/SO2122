@@ -8,7 +8,7 @@
 typedef struct pedidoMB{
     char nomepipe[PATH_MAX];
     char nome[PATH_MAX];
-    char sintomas[PATH_MAX];
+    char especialidade[PATH_MAX];
 } pedidoMB;
 
 typedef struct respostaBM{
