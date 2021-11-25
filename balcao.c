@@ -105,11 +105,14 @@ int main(int argc, char **argv){
             
         } */
         else if(strcmp(comando,"encerra")==0){
-            if(pthread_cancel(clientes_thread)!=0){
-                myAbort("Thread cancelation failed", EXIT_FAILURE);
+            if(pthread_kill(clientes_thread,SIGUSR1)!=0){
+                myAbort("pthread_kill failed", EXIT_FAILURE);
             }
             fprintf(stderr, "\npthread funcionou. ");
             break;
+        }
+        else{
+            fprintf(stderr, "\nComando nao reconhecido.");
         }
     }
     fprintf(stderr, "\nantes de join ");
@@ -123,7 +126,7 @@ int main(int argc, char **argv){
     if(clientes!=NULL)
         free(clientes);
 
-    fprintf(stderr,"\nfim mesmo");
+    fprintf(stderr,"\nfim mesmo\n");
 
 }
 
@@ -133,13 +136,9 @@ void *clientes_thread_handler(void* arg){
     int nbytes_read, nbytes_write; 
     pedidoCB pedidoCB;
     respostaBC respostaBC;
-    
-    if(pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL)!=0){
-        myAbort("Thread pthread_setcancelstate failed", EXIT_FAILURE);
-    }
-    if(pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL)!=0){
-        myAbort("Thread pthread_setcanceltype failed", EXIT_FAILURE);
-    }
+    struct sigaction act;
+    act.sa_handler=termina_clientes_handler;
+    sigaction(SIGUSR1,&act,NULL);
 
     CBpipe_fd = open_CBpipe();
 
@@ -193,6 +192,11 @@ void *clientes_thread_handler(void* arg){
 
 }
 
+void termina_clientes_handler(int s){
+    close(clientpipe);
+    close();
+    unlink();unlink();
+}
 
 int open_CBpipe(){
     char CBpipe[PATH_MAX];

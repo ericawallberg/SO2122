@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -46,6 +47,7 @@ void mostra_medicos(medico* tab, int* n);
 //handlers
 void *clientes_thread_handler(void* arg);
 void *medicos_thread_handler(void* arg);
+void termina_clientes_handler(int s);
 
 
 //pipes
